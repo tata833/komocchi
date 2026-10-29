@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8f4ec">
+<title>こもっち</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+  /* 画面: Figmaの 390×844 フレーム（上56 / 左右24 / 下40、要素間20） */
+  .screen {
+    min-height: 100dvh; max-width: 430px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 20px;
+    padding: max(56px, env(safe-area-inset-top)) 24px max(40px, env(safe-area-inset-bottom));
+  }
+  @media (min-width: 600px) {
+    body { background: #ece6da; }
+    .screen { min-height: 844px; max-width: 390px; margin: 32px auto; border-radius: 28px; background: var(--bg); }
+  }
+  .spacer { flex: 1 0 0; }
+  .header { display: flex; align-items: center; justify-content: space-between; }
+  .tag.white { background: var(--surface); color: var(--sub); align-self: center; }
+  .tag.warn { background: var(--warn-bg); color: var(--warn-text); }
+
+  .progress { display: flex; gap: 6px; }
+  .progress span { flex: 1; height: 6px; border-radius: 3px; background: var(--track); }
+  .progress span.on { background: var(--accent-grad); }
+
+  .qtag { display: flex; align-items: center; justify-content: space-between; }
+  .qnum { font-weight: 700; font-size: 13px; line-height: 1.5; color: var(--sub); }
+
+  h1 { font-weight: 700; font-size: 26px; line-height: 1.4; }
+  h1.s24 { font-size: 24px; }
+  h1.s28 { font-size: 28px; text-align: center; }
+  .lead { font-size: 14px; line-height: 1.5; color: var(--sub); }
+  .lead.center { text-align: center; }
+  .note { font-size: 12px; line-height: 1.5; color: var(--sub); }
+  .note.right { text-align: right; }
+  .note.center { text-align: center; }
+  .fine { font-size: 11px; line-height: 1.5; color: var(--sub); text-align: center; }
+  .label { font-weight: 700; font-size: 13px; line-height: 1.5; color: var(--sub); }
+
+  .hero { flex: 1 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+  .hero-logo { width: 190px; height: 152px; }
+  .hero-badge { width: 176px; height: 176px; overflow: visible; }
+
+  .info { display: flex; flex-direction: column; gap: 4px; }
+  .info strong { font-size: 14px; line-height: 1.5; }
+  .summary { display: flex; flex-direction: column; gap: 10px; }
+  .summary .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .summary .k { font-size: 13px; color: var(--sub); line-height: 1.5; }
+  .summary .v { font-size: 14px; font-weight: 700; line-height: 1.5; text-align: right; }
+
+  .input {
+    display: block; width: 100%; background: var(--surface);
+    border: 2px solid var(--border); border-radius: 16px; padding: 16px;
+    font-weight: 700; font-size: 18px; line-height: 1.5; outline: none; caret-color: var(--primary);
+  }
+  .input:focus { border-color: var(--primary); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 10px 16px; font-size: 14px; line-height: 1.5; cursor: pointer; white-space: nowrap;
+  }
+  .chip.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+  .chip:disabled:not(.on) { opacity: .45; cursor: default; }
+
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .option {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 14px 16px; font-size: 15px; line-height: 1.5; cursor: pointer;
+  }
+  .option .radio { flex: none; width: 22px; height: 22px; border-radius: 11px; border: 2px solid var(--radio); background: var(--surface); position: relative; }
+  .option.on { background: var(--primary-tint); border: 2px solid var(--primary); padding: 13px 15px; font-weight: 700; }
+  .option.on .radio { border: 0; background: var(--primary); }
+  .option.on .radio::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #fff; }
+
+  .visual { flex: 1 0 0; display: flex; align-items: center; justify-content: center; min-height: 240px; }
+  .bt { width: 260px; height: 260px; max-width: 100%; position: relative; }
+  .bt .rings { position: absolute; inset: 0; }
+  .bt .ring { transform-origin: 130px 130px; }
+  .bt .dev { position: absolute; left: 60px; top: 60px; width: 140px; height: 140px; }
+  .busy .bt .ring { animation: pulse 1.6s ease-out infinite; }
+  .busy .bt .ring.r2 { animation-delay: .5s; }
+  @keyframes pulse { 0% { transform: scale(.85); opacity: 1; } 100% { transform: scale(1.06); opacity: .25; } }
+
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step { display: flex; align-items: center; gap: 12px; font-size: 14px; line-height: 1.5; }
+  .step .n {
+    flex: none; width: 24px; height: 24px; border-radius: 12px; background: var(--primary-soft); color: var(--primary-text);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;
+  }
+  .status { font-size: 13px; line-height: 1.5; text-align: center; color: var(--sub); min-height: 20px; }
+  .status.err { color: var(--error); font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .busy .bt .ring { animation: none; } }
+</style>
+</head>
+<body>
+<main id="app" class="screen" aria-live="polite"></main>
+
+<script src="komocchi.js"></script>
+<script>
+const app = document.getElementById('app');
+const STORE = 'komocchi.v1';
+const esc = K.esc;
+
+let data = null, slots = [], configError = '';
+let state = { nick: '', answers: {}, ver: 0 };
+let screen = 'welcome';
+
+function load() { try { const s = JSON.parse(localStorage.getItem(STORE)); if (s) state = s; } catch (e) {} }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
+
+// ---------- 共通パーツ ----------
+const header = () => `<div class="header"><p class="brand">${K.logoSVG()}${esc(data.brand)}</p><span class="tag">LIVE 会場限定</span></div>`;
+function progress(step) {
+  const total = data.questions.length + 1;
+  return `<div class="progress" aria-label="${step} / ${total}">${Array.from({ length: total }, (_, i) => `<span class="${i < step ? 'on' : ''}"></span>`).join('')}</div>`;
+}
+function go(next) { screen = next; render(); window.scrollTo(0, 0); }
+function setStatus(text, err) {
+  const el = document.getElementById('status');
+  if (el) { el.textContent = text; el.className = 'status' + (err ? ' err' : ''); }
+}
+const isAnswered = q => { const a = state.answers[q.id]; return Array.isArray(a) ? a.length > 0 : typeof a === 'number'; };
+
+// ---------- 画面 ----------
+const screens = {
+  welcome() {
+    let alert = '';
+    if (configError) alert = `<div class="alert err">設定エラー: ${esc(configError)}</div>`;
+    else if (!K.hasBluetooth()) alert = `<div class="alert">このブラウザはBluetoothに対応していません。AndroidはGoogle Chrome、iPhoneは「Bluefy」アプリで開いてください。</div>`;
+    return `${header()}
+      <div class="hero">
+        <span class="tag white">${esc(data.event)}</span>
+        ${K.logoSVG('hero-logo', data.brand)}
+        <h1 class="s28">すれ違いから、<br>共通点を集めよう。</h1>
+        <p class="lead center">会場の「好き」を教えると、同じ「好き」の人とすれ違ったときにバッジが光ります。</p>
+      </div>
+      ${alert}
+      <div class="card info"><strong>質問に答えるだけ。約1分で完了</strong><p class="note">アプリのインストールは不要です</p></div>
+      <button class="btn" data-act="start" ${configError ? 'disabled' : ''}>はじめる</button>
+      <p class="fine">Google Chrome（Web Bluetooth対応）で開いてください</p>`;
+  },
+
+  nick() {
+    return `${header()}${progress(1)}
+      <span class="tag warn">はじめての方だけ</span>
+      <h1 class="s24">はじめまして！<br>ニックネームを教えてください</h1>
+      <p class="lead">本名や連絡先は不要です。あとから変更もできます。</p>
+      <label class="label" for="nick">ニックネーム</label>
+      <input id="nick" class="input" maxlength="10" autocomplete="off" enterkeyhint="next" value="${esc(state.nick)}" placeholder="例：ミナト">
+      <p class="note right"><span id="count">${[...state.nick].length}</span> / 10文字</p>
+      <div class="spacer"></div>
+      <p class="status" id="status"></p>
+      <button class="btn" data-act="nickNext" ${state.nick.trim() ? '' : 'disabled'}>次へ</button>
+      <button class="link" data-act="restore">登録済みの方はこちら</button>`;
+  },
+
+  q(idx) {
+    const q = data.questions[idx];
+    const ans = state.answers[q.id];
+    const n = data.questions.length;
+    let body, foot = '';
+    if (q.type === 'multi') {
+      const sel = Array.isArray(ans) ? ans : [];
+      const max = q.max || q.choices.length;
+      body = `<div class="chips" role="group">${q.choices.map((c, i) => {
+        const on = sel.includes(i);
+        return `<button class="chip ${on ? 'on' : ''}" data-act="pick" data-i="${i}" aria-pressed="${on}" ${!on && sel.length >= max ? 'disabled' : ''}>${esc(c.label)}</button>`;
+      }).join('')}</div>`;
+      foot = `<p class="note right">${sel.length} / ${max} 選択中</p>`;
+    } else {
+      body = `<div class="options" role="radiogroup">${q.choices.map((c, i) => {
+        const on = ans === i;
+        return `<button class="option ${on ? 'on' : ''}" role="radio" aria-checked="${on}" data-act="pick" data-i="${i}"><span class="radio"></span>${esc(c.label)}</button>`;
+      }).join('')}</div>`;
+    }
+    return `${header()}${progress(idx + 2)}
+      <div class="qtag"><span class="tag">会場限定の質問</span><span class="qnum">Q${idx + 1} / ${n}</span></div>
+      <h1>${q.title.map(esc).join('<br>')}</h1>
+      <p class="lead">${esc(q.hint)}</p>
+      ${body}${foot}
+      <div class="spacer"></div>
+      <button class="btn" data-act="next" ${isAnswered(q) ? '' : 'disabled'}>次へ</button>
+      <button class="link" data-act="skip">スキップ</button>`;
+  },
+
+  connect() {
+    return `${header()}
+      <h1 class="s24">バッジに送信しましょう</h1>
+      <p class="lead">バッジの電源を入れて、スマホの近くに置いてください。</p>
+      <div class="visual"><div class="bt">
+        <svg class="rings" viewBox="0 0 260 260" aria-hidden="true">
+          <circle class="ring r1" cx="130" cy="130" r="128" fill="none" stroke="#ecd9c8" stroke-width="2"/>
+          <circle class="ring r2" cx="130" cy="130" r="101" fill="none" stroke="#f5b48c" stroke-width="2"/>
+        </svg>
+        ${K.badgeSVG(data.ring, null, 'dev')}
+      </div></div>
+      <div class="card steps">
+        <div class="step"><span class="n">1</span>バッジの電源を入れる</div>
+        <div class="step"><span class="n">2</span>下のボタンを押す</div>
+        <div class="step"><span class="n">3</span>表示されたダイアログで「${esc(data.device.label)}」を選ぶ</div>
+      </div>
+      <p class="status" id="status"></p>
+      <button class="btn" data-act="send" ${K.hasBluetooth() ? '' : 'disabled'}>バッジとペアリング</button>
+      <button class="link" data-act="back">回答を見直す</button>`;
+  },
+
+  done() {
+    const multi = data.questions.find(q => q.type === 'multi' && q.summary);
+    const answered = data.questions.filter(isAnswered).length;
+    const total = data.questions.length;
+    const rows = [['ニックネーム', state.nick || '—']];
+    if (multi) rows.push([multi.summary.label, `${(state.answers[multi.id] || []).length}${multi.summary.unit || ''}`]);
+    rows.push(['回答', answered === total ? `${total}問すべて完了` : `${answered} / ${total}問`]);
+    return `${header()}
+      <div class="hero">
+        ${K.badgeSVG(data.ring, K.previewFills(data, slots, state.answers), 'hero-badge')}
+        <h1 class="s28">送信完了！</h1>
+        <p class="lead center">あとは会場を歩くだけ。<br>同じ「好き」の人とすれ違うと、バッジが光ります。</p>
+      </div>
+      <div class="card summary">${rows.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>
+      <p class="note center">何が共通しているかは、話すまでのお楽しみ。</p>
+      <button class="btn" data-act="close">閉じる</button>
+      <button class="btn secondary" data-act="redo">回答をやり直す</button>`;
+  },
+};
+
+function render() {
+  app.classList.remove('busy');
+  const m = /^q(\d+)$/.exec(screen);
+  app.innerHTML = m ? screens.q(+m[1]) : screens[screen]();
+  if (screen === 'nick') {
+    const input = document.getElementById('nick');
+    input.addEventListener('input', () => {
+      state.nick = input.value.slice(0, 10);
+      document.getElementById('count').textContent = [...state.nick].length;
+      app.querySelector('[data-act="nickNext"]').disabled = !state.nick.trim();
+      save();
+    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && state.nick.trim()) go('q0'); });
+  }
+}
+
+// ---------- 操作 ----------
+app.addEventListener('click', async e => {
+  const t = e.target.closest('[data-act]');
+  if (!t || t.disabled) return;
+  const act = t.dataset.act;
+  const m = /^q(\d+)$/.exec(screen);
+  const idx = m ? +m[1] : -1;
+  const q = idx >= 0 ? data.questions[idx] : null;
+
+  if (act === 'start') go(state.nick.trim() ? 'q0' : 'nick');
+  else if (act === 'nickNext') go('q0');
+  else if (act === 'pick') {
+    const i = +t.dataset.i;
+    if (q.type === 'multi') {
+      const sel = Array.isArray(state.answers[q.id]) ? state.answers[q.id] : [];
+      state.answers[q.id] = sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i].slice(0, q.max || 99);
+    } else state.answers[q.id] = i;
+    save(); render();
+  }
+  else if (act === 'next' || act === 'skip') {
+    if (act === 'skip') { delete state.answers[q.id]; save(); }
+    go(idx + 1 < data.questions.length ? 'q' + (idx + 1) : 'connect');
+  }
+  else if (act === 'back') go('q0');
+  else if (act === 'send') {
+    t.disabled = true; app.classList.add('busy'); setStatus('バッジを探しています…');
+    let badge = null;
+    try {
+      badge = await K.connectBadge(data);
+      setStatus('送信中…');
+      const res = await badge.send(K.encodeConfig(data, slots, state.answers));
+      if (res !== 'OK') throw new Error('badge:' + res);
+      badge.disconnect();
+      go('done');
+    } catch (err) {
+      console.error(err); badge && badge.disconnect();
+      app.classList.remove('busy'); t.disabled = false; setStatus(K.bleError(err), true);
+    }
+  }
+  else if (act === 'restore') {
+    if (!K.hasBluetooth()) { setStatus('このブラウザはBluetoothに対応していません', true); return; }
+    setStatus('バッジを選んでください…');
+    let badge = null;
+    try {
+      badge = await K.connectBadge(data);
+      const answers = K.decodeAnswers(data, slots, await badge.readAnswers());
+      badge.disconnect();
+      if (!answers) throw new Error('badge:read');
+      state.answers = answers; save(); go('q0');
+    } catch (err) { console.error(err); badge && badge.disconnect(); setStatus(K.bleError(err), true); }
+  }
+  else if (act === 'close') go('welcome');
+  else if (act === 'redo') go('q0');
+});
+
+// ---------- 起動 ----------
+async function init() {
+  load();
+  try {
+    const res = await fetch('questions.json', { cache: 'no-cache' });
+    data = K.normalize(await res.json());
+  } catch (e) {
+    app.innerHTML = `<div class="alert err">質問データを読み込めませんでした。通信できる場所で一度ページを開いてください。</div>`;
+    return;
+  }
+  if (state.ver !== data.version) { state.answers = {}; state.ver = data.version; save(); }
+  const built = K.buildSlots(data);
+  slots = built.slots; configError = built.error;
+  document.title = data.brand;
+  render();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+init();
+</script>
+</body>
+</html>

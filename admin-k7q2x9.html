@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f8f4ec">
+<title>こもっち 編集</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+  body { padding-bottom: 48px; }
+  .top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .top-in { max-width: 680px; margin: 0 auto; padding: 14px 16px 0; }
+  .top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .tabs { display: flex; gap: 4px; margin-top: 10px; overflow-x: auto; }
+  .tabs button {
+    flex: none; background: none; border: 0; padding: 10px 14px; font-weight: 700; font-size: 14px; color: var(--sub);
+    border-bottom: 3px solid transparent; cursor: pointer;
+  }
+  .tabs button.on { color: var(--primary-text); border-color: var(--primary); }
+  .dirty { font-size: 12px; font-weight: 700; color: var(--warn-text); background: var(--warn-bg); border-radius: 10px; padding: 3px 10px; }
+  main { max-width: 680px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  h2 { font-size: 16px; line-height: 1.5; margin-bottom: 10px; }
+  h3 { font-size: 14px; line-height: 1.5; }
+  p.hint { font-size: 12px; color: var(--sub); line-height: 1.6; margin-top: 6px; }
+  .card { display: flex; flex-direction: column; gap: 10px; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--sub); }
+  .in, select.in, textarea.in {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface);
+    padding: 9px 11px; font-size: 15px; font-weight: 400; color: var(--text); outline: none;
+  }
+  .in:focus { border-color: var(--primary); }
+  textarea.in { resize: vertical; line-height: 1.5; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row.wrap { flex-wrap: wrap; }
+  .grow { flex: 1; min-width: 0; }
+  .mini {
+    flex: none; min-width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; font-size: 14px; color: var(--sub);
+  }
+  .mini:disabled { opacity: .35; cursor: default; }
+  .mini.del { color: var(--error); }
+  .btn.small { width: auto; padding: 10px 18px; font-size: 14px; }
+  .btn.ghost { background: var(--surface); color: var(--primary-text); border: 1.5px dashed var(--radio); }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btns .btn { flex: 1 1 140px; width: auto; }
+
+  .meter { display: flex; gap: 4px; }
+  .meter span { flex: 1; height: 10px; border-radius: 5px; background: var(--track); }
+  .meter span.on { background: var(--accent-grad); }
+  .meter span.over { background: var(--error); }
+  .meter-text { font-size: 13px; font-weight: 700; }
+
+  .qhead { display: flex; align-items: center; gap: 6px; }
+  .qhead b { font-size: 18px; }
+  .choice { display: flex; align-items: center; gap: 6px; }
+  .sw { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #0002; }
+  select.color { width: 74px; flex: none; padding: 9px 6px; }
+  .choice { flex-wrap: wrap; }
+  .choice .grow { flex: 1 1 100%; }
+  @media (min-width: 520px) { .choice { flex-wrap: nowrap; } .choice .grow { flex: 1 1 auto; } }
+  .badge-slot { font-size: 11px; font-weight: 700; color: var(--sub); background: var(--track); border-radius: 8px; padding: 2px 8px; }
+
+  /* LEDリング */
+  .ringwrap { display: flex; justify-content: center; }
+  .ring { width: 100%; max-width: 340px; touch-action: manipulation; }
+  .ring .led { cursor: pointer; }
+  .ring text { font-size: 11px; font-weight: 700; pointer-events: none; }
+  .slots { display: flex; flex-direction: column; gap: 6px; }
+  .slot {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 9px 12px; font-size: 14px;
+  }
+  .slot.on { border: 2px solid var(--primary); background: var(--primary-tint); padding: 8.5px 11.5px; }
+  .slot .cnt { margin-left: auto; font-size: 12px; color: var(--sub); white-space: nowrap; }
+
+  .qr { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .qrbox { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .qrbox .code { background: #fff; padding: 12px; border-radius: 12px; border: 1px solid var(--border); }
+  .qrbox .url { font-size: 11px; color: var(--sub); word-break: break-all; }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+  .kv > span:nth-child(odd) { color: var(--sub); }
+  .yes { color: #1a8f3c; font-weight: 700; } .no { color: var(--sub); }
+  table.peers { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.peers th, table.peers td { border-bottom: 1px solid #eee; padding: 6px 4px; text-align: left; vertical-align: top; }
+  table.peers th { color: var(--sub); font-weight: 400; }
+  .ansform { display: flex; flex-direction: column; gap: 8px; }
+  .ansform .qa { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .ansform .checks { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .status { font-size: 13px; color: var(--sub); min-height: 20px; }
+  .status.err { color: var(--error); font-weight: 700; }
+  .status.ok { color: #1a8f3c; font-weight: 700; }
+  code { font-size: 12px; background: var(--track); border-radius: 4px; padding: 1px 4px; }
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="top-row">
+    <p class="brand" id="brand"></p>
+    <span class="dirty" id="dirty" hidden>未公開の変更あり</span>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="q">質問</button>
+    <button data-tab="led">LED</button>
+    <button data-tab="pub">公開</button>
+    <button data-tab="qr">QR</button>
+    <button data-tab="dbg">バッジ診断</button>
+  </nav>
+</div></header>
+<main id="main"></main>
+
+<script src="komocchi.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// =====================================================================
+// こもっち 編集ページ（本サイトからはリンクしていない。このURLかQRからだけ開ける）
+// ・質問を編集 → 「公開」でGitHubの questions.json を書き換える
+// ・下書きはこの端末に自動保存
+// =====================================================================
+const $ = id => document.getElementById(id);
+const esc = K.esc;
+const DRAFT = 'komocchi.draft', GH = 'komocchi.gh';
+const main = $('main');
+
+let live = null;          // 公開中の questions.json
+let draft = null;         // 編集中
+let tab = 'q';
+let activeSlot = 0;
+let orderChanged = false; // 選択肢の並び・数を変えた（登録済みバッジは登録し直しが必要）
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const loadJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
+const saveJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+// 公開用のJSONに整える
+function serialize(d) {
+  const out = clone(d);
+  out.questions.forEach(q => {
+    q.title = q.title.filter(t => t.trim() !== '');
+    if (q.type !== 'multi') { delete q.max; delete q.summary; }
+    q.choices.forEach(c => { if (!c.leds || !c.leds.length) delete c.leds; });
+  });
+  return out;
+}
+const isDirty = () => JSON.stringify(serialize(draft)) !== JSON.stringify(serialize(live));
+function touch(structural) {
+  saveJSON(DRAFT, { base: live.version, data: draft, orderChanged });
+  $('dirty').hidden = !isDirty();
+  if (structural) render();
+}
+
+// ---------- 枠（バッジ側の8枠） ----------
+function slotInfo() {
+  const { slots, error } = K.buildSlots(draft);
+  return { slots, error, items: slots.map(s => {
+    const q = draft.questions[s.qi];
+    const c = s.ci != null ? q.choices[s.ci] : null;
+    return {
+      ...s,
+      name: `Q${s.qi + 1} ` + (c ? c.label : (q.title.join('') || '(無題)')),
+      color: c ? (c.color || q.color) : ((q.choices[0] && q.choices[0].color) || q.color),
+      get leds() { return (c ? c.leds : q.leds) || []; },
+      set leds(v) { if (c) c.leds = v; else { q.leds = v; q.choices.forEach(x => delete x.leds); } },
+    };
+  }) };
+}
+
+function colorSelect(qi, ci, value) {
+  return `<select class="in color" data-q="${qi}" data-c="${ci}" data-f="ccolor">${Object.entries(K.PALETTE)
+    .map(([n, p]) => `<option value="${n}" ${+n === +value ? 'selected' : ''}>${p.name}</option>`).join('')}</select>`;
+}
+
+// ================= 質問タブ =================
+function tabQuestions() {
+  const { slots, error } = K.buildSlots(draft);
+  const used = slots.length;
+  const meter = Array.from({ length: Math.max(K.NQ, used) }, (_, i) =>
+    `<span class="${i < used ? (i >= K.NQ ? 'over' : 'on') : ''}"></span>`).join('');
+
+  const qs = draft.questions.map((q, qi) => {
+    const isMulti = q.type === 'multi';
+    const choices = q.choices.map((c, ci) => `
+      <div class="choice">
+        <input class="in grow" data-q="${qi}" data-c="${ci}" data-f="clabel" value="${esc(c.label)}" placeholder="選択肢">
+        <span class="sw" style="background:${K.PALETTE[c.color || q.color].hex}"></span>
+        ${colorSelect(qi, ci, c.color || q.color)}
+        <button class="mini" data-a="cUp" data-q="${qi}" data-c="${ci}" ${ci === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
+        <button class="mini del" data-a="cDel" data-q="${qi}" data-c="${ci}" aria-label="削除">×</button>
+      </div>`).join('');
+    return `<section class="card">
+      <div class="qhead">
+        <b>Q${qi + 1}</b>
+        <span class="badge-slot">枠 ${isMulti ? q.choices.length : 1} 個</span>
+        <span class="grow"></span>
+        <button class="mini" data-a="qUp" data-q="${qi}" ${qi === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
+        <button class="mini" data-a="qDown" data-q="${qi}" ${qi === draft.questions.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
+        <button class="mini del" data-a="qDel" data-q="${qi}" aria-label="削除">×</button>
+      </div>
+      <div class="grid2">
+        <label class="f">答え方
+          <select class="in" data-q="${qi}" data-f="type">
+            <option value="single" ${!isMulti ? 'selected' : ''}>1つだけ選ぶ</option>
+            <option value="multi" ${isMulti ? 'selected' : ''}>いくつでも選ぶ</option>
+          </select></label>
+        ${isMulti ? `<label class="f">選べる上限<input class="in" type="number" min="1" max="${q.choices.length}" data-q="${qi}" data-f="max" value="${q.max || q.choices.length}"></label>` : '<span></span>'}
+      </div>
+      <label class="f">質問文（改行で2行に分かれます）
+        <textarea class="in" rows="2" data-q="${qi}" data-f="title">${esc(q.title.join('\n'))}</textarea></label>
+      <label class="f">補足<input class="in" data-q="${qi}" data-f="hint" value="${esc(q.hint)}"></label>
+      ${isMulti ? `<div class="grid2">
+        <label class="f">完了画面の項目名<input class="in" data-q="${qi}" data-f="sumLabel" value="${esc(q.summary ? q.summary.label : '')}" placeholder="例：アーティスト"></label>
+        <label class="f">単位<input class="in" data-q="${qi}" data-f="sumUnit" value="${esc(q.summary ? q.summary.unit : '')}" placeholder="例：組"></label>
+      </div>` : ''}
+      <h3>選択肢 <span class="hint" style="font-weight:400;color:var(--sub);font-size:12px">色＝一致したときの光の色</span></h3>
+      ${choices}
+      <button class="btn ghost small" data-a="cAdd" data-q="${qi}" ${!isMulti && q.choices.length >= 15 ? 'disabled' : ''}>＋ 選択肢を追加</button>
+      ${isMulti ? '<p class="hint">「いくつでも選ぶ」は、選択肢1つにつきバッジの枠を1つ使います。</p>' : ''}
+    </section>`;
+  }).join('');
+
+  return `
+    ${orderChanged ? `<div class="alert">選択肢の並び・数を変えました。すでに登録済みのバッジは、公開後に登録し直すまで正しく照合されません。</div>` : ''}
+    <section class="card">
+      <h2>バッジの枠</h2>
+      <div class="meter">${meter}</div>
+      <p class="meter-text">${used} / ${K.NQ} 枠を使用</p>
+      ${error ? `<div class="alert err">${esc(error)}</div>` : ''}
+      <p class="hint">バッジが照合できるのは最大8枠。「1つだけ選ぶ」質問は1枠、「いくつでも選ぶ」質問は選択肢の数だけ枠を使います。</p>
+    </section>
+    <section class="card">
+      <h2>基本</h2>
+      <label class="f">イベント名（トップに表示）<input class="in" data-f="event" value="${esc(draft.event)}"></label>
+      <div class="grid2">
+        <label class="f">ダイアログで選ぶ名前（案内文）<input class="in" data-f="devLabel" value="${esc(draft.device.label)}"></label>
+        <label class="f">バッジ名の先頭（カンマ区切り）<input class="in" data-f="devPrefixes" value="${esc(draft.device.prefixes.join(', '))}"></label>
+      </div>
+      <p class="hint">「バッジ名の先頭」はファームの <code>DEVICE_NAME</code> の頭と合わせます。例：<code>KOMOCCHI-01</code> なら <code>KOMOCCHI</code></p>
+    </section>
+    ${qs}
+    <button class="btn ghost" data-a="qAdd">＋ 質問を追加</button>`;
+}
+
+// ================= LEDタブ =================
+function ringSVG(items) {
+  const owner = new Array(K.LED_NUM).fill(-1);
+  items.forEach((it, si) => it.leds.forEach(n => { if (n >= 0 && n < K.LED_NUM) owner[n] = si; }));
+  const leds = Array.from({ length: K.LED_NUM }, (_, i) => {
+    const [x, y] = K.ledXY(draft.ring, i, 118, 150, 150);
+    const o = owner[i];
+    const fill = o >= 0 ? K.PALETTE[items[o].color].hex : '#f1ece3';
+    const act = o === activeSlot;
+    const dark = o >= 0 && [7, 4, 6, 2].includes(+items[o].color);
+    return `<g class="led" data-led="${i}" role="button" aria-label="LED ${i}">
+      <circle cx="${x}" cy="${y}" r="15" fill="${fill}" stroke="${act ? '#3a3631' : (i === 0 ? '#ff3b3b' : '#d6cfc2')}" stroke-width="${act ? 3 : 1.5}"/>
+      <text x="${x}" y="${y + 4}" text-anchor="middle" fill="${o >= 0 && !dark ? '#fff' : '#6f685d'}">${i}</text></g>`;
+  }).join('');
+  return `<svg class="ring" viewBox="0 0 300 300">
+    <circle cx="150" cy="150" r="140" fill="#2b2824"/>
+    <circle cx="150" cy="150" r="96" fill="#f8f4ec"/>
+    <g transform="translate(108 120) scale(.42)">${K.logoSVG().replace(/^<svg[^>]*>|<\/svg>\s*$/g, '')}</g>
+    ${leds}</svg>`;
+}
+
+function tabLed() {
+  const { items, error } = slotInfo();
+  if (activeSlot >= items.length) activeSlot = 0;
+  const used = new Set(items.flatMap(it => it.leds));
+  const free = K.LED_NUM - used.size;
+  return `
+    ${error ? `<div class="alert err">${esc(error)}（質問タブで枠を減らしてください）</div>` : ''}
+    <section class="card">
+      <h2>一致したときに光る場所</h2>
+      <p class="hint">下のリストで枠を選んでから、リングのLEDをタップして割り当てます。もう一度タップすると外れます。リングは「全部一致したとき」の光り方です。</p>
+      <div class="ringwrap">${ringSVG(items)}</div>
+      <p class="meter-text" style="text-align:center">${free ? `未使用のLED：${free} 個` : '24個すべて使っています'}</p>
+      <div class="btns">
+        <button class="btn small" data-a="auto">24個を均等に割り当て</button>
+        <button class="btn secondary small" data-a="clearLeds">すべて外す</button>
+      </div>
+    </section>
+    <section class="card">
+      <h2>枠</h2>
+      <div class="slots">${items.map((it, si) => `
+        <button class="slot ${si === activeSlot ? 'on' : ''}" data-a="slot" data-s="${si}">
+          <span class="sw" style="background:${K.PALETTE[it.color].hex}"></span>
+          <span>${esc(it.name)}</span><span class="cnt">${it.leds.length} 個</span>
+        </button>`).join('')}</div>
+      <p class="hint">「1つだけ選ぶ」質問は、どの選択肢でも同じ場所が光り、色だけ選択肢ごとに変わります。</p>
+    </section>
+    <section class="card">
+      <h2>リングの向き</h2>
+      <p class="hint">バッジのボタンを短く押すと（LEDテスト）0番が赤く光ります。実物と同じになるように合わせてください。</p>
+      <div class="grid2">
+        <label class="f">0番の位置
+          <select class="in" data-f="startAngle">${[[0, '上（12時）'], [90, '右（3時）'], [180, '下（6時）'], [270, '左（9時）']]
+            .map(([v, l]) => `<option value="${v}" ${+draft.ring.startAngle === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label class="f">回る向き
+          <select class="in" data-f="clockwise">
+            <option value="1" ${draft.ring.clockwise ? 'selected' : ''}>時計回り</option>
+            <option value="0" ${!draft.ring.clockwise ? 'selected' : ''}>反時計回り</option>
+          </select></label>
+      </div>
+    </section>`;
+}
+
+// ================= 公開タブ =================
+function ghDefaults() {
+  const g = loadJSON(GH, {});
+  const host = location.hostname;
+  if (!g.owner && host.endsWith('.github.io')) g.owner = host.split('.')[0];
+  if (!g.repo && host.endsWith('.github.io')) g.repo = location.pathname.split('/').filter(Boolean)[0] || `${g.owner}.github.io`;
+  g.branch = g.branch || 'main';
+  g.path = g.path || 'questions.json';
+  return g;
+}
+
+function tabPublish() {
+  const g = ghDefaults();
+  const { error } = K.buildSlots(draft);
+  return `
+    <section class="card">
+      <h2>公開</h2>
+      <p>${isDirty() ? `未公開の変更があります。公開すると版が <b>v${live.version}</b> → <b>v${live.version + 1}</b> になり、来場者のスマホに残っている古い回答はリセットされます。` : '公開中の内容と同じです。'}</p>
+      ${error ? `<div class="alert err">${esc(error)}。このままでは公開できません。</div>` : ''}
+      <button class="btn" data-a="publish" ${!isDirty() || error ? 'disabled' : ''}>GitHubに公開</button>
+      <p class="status" id="pubStatus"></p>
+      <p class="hint">反映まで1分ほどかかります。会場のスマホは、通信できるときにページを開き直すと新しい質問になります。</p>
+    </section>
+    <section class="card">
+      <h2>GitHubの設定（この端末だけに保存）</h2>
+      <div class="grid2">
+        <label class="f">ユーザー名<input class="in" data-g="owner" value="${esc(g.owner || '')}"></label>
+        <label class="f">リポジトリ名<input class="in" data-g="repo" value="${esc(g.repo || '')}"></label>
+        <label class="f">ブランチ<input class="in" data-g="branch" value="${esc(g.branch)}"></label>
+        <label class="f">ファイル<input class="in" data-g="path" value="${esc(g.path)}"></label>
+      </div>
+      <label class="f">アクセストークン<input class="in" type="password" autocomplete="off" data-g="token" value="${esc(g.token || '')}" placeholder="github_pat_…"></label>
+      <p class="hint">GitHub → Settings → Developer settings → Fine-grained tokens で、このリポジトリだけ・Contents を Read and write にしたトークンを作って貼ります。他人の端末には保存しないでください。</p>
+    </section>
+    <section class="card">
+      <h2>ファイルで受け渡し</h2>
+      <div class="btns">
+        <button class="btn secondary small" data-a="download">questions.json を保存</button>
+        <button class="btn secondary small" data-a="import">ファイルを読み込む</button>
+        <button class="btn secondary small" data-a="revert" ${isDirty() ? '' : 'disabled'}>公開中の内容に戻す</button>
+      </div>
+      <input type="file" id="file" accept="application/json,.json" hidden>
+      <p class="hint">トークンを使わない場合は、保存したファイルをGitHubのリポジトリに手でアップロードしても同じです。</p>
+    </section>`;
+}
+
+// ================= QRタブ =================
+function tabQR() {
+  return `
+    <div class="qr">
+      <section class="card qrbox">
+        <h2>来場者用（本サイト）</h2>
+        <div class="code" id="qrSite"></div>
+        <p class="url" id="urlSite"></p>
+        <button class="btn small" data-a="qrSave" data-t="qrSite" data-n="komocchi-site">画像を保存</button>
+      </section>
+      <section class="card qrbox">
+        <h2>スタッフ用（この編集ページ）</h2>
+        <div class="code" id="qrAdmin"></div>
+        <p class="url" id="urlAdmin"></p>
+        <button class="btn secondary small" data-a="qrSave" data-t="qrAdmin" data-n="komocchi-admin">画像を保存</button>
+        <p class="hint">来場者に見せないでください。URLを変えたいときは、このファイル名を変えるだけでOKです。</p>
+      </section>
+    </div>`;
+}
+function drawQRs() {
+  const site = new URL('./', location.href).href;
+  const admin = location.href.split('#')[0].split('?')[0];
+  const make = (id, text) => {
+    $(id).innerHTML = '';
+    if (window.QRCode) new QRCode($(id), { text, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+    else $(id).textContent = 'QRの部品を読み込めませんでした（通信を確認）';
+  };
+  make('qrSite', site); make('qrAdmin', admin);
+  $('urlSite').textContent = site; $('urlAdmin').textContent = admin;
+}
+
+// ================= バッジ診断タブ（テストプログラムの機能） =================
+let badge = null, pollTimer = null, polling = false;
+let testAnswers = {}, simAnswers = {};
+
+function answerForm(prefix, answers) {
+  return `<div class="ansform">${draft.questions.map((q, qi) => {
+    const a = answers[q.id];
+    if (q.type === 'multi') return `<div class="qa"><b>Q${qi + 1}. ${esc(q.title.join(''))}</b><div class="checks">${q.choices.map((c, ci) =>
+      `<label><input type="checkbox" data-form="${prefix}" data-q="${qi}" data-c="${ci}" ${Array.isArray(a) && a.includes(ci) ? 'checked' : ''}> ${esc(c.label)}</label>`).join('')}</div></div>`;
+    return `<label class="qa"><b>Q${qi + 1}. ${esc(q.title.join(''))}</b>
+      <select class="in" data-form="${prefix}" data-q="${qi}"><option value="">答えない</option>${q.choices.map((c, ci) =>
+      `<option value="${ci}" ${a === ci ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select></label>`;
+  }).join('')}</div>`;
+}
+function readForm(prefix) {
+  const out = {};
+  document.querySelectorAll(`[data-form="${prefix}"]`).forEach(el => {
+    const q = draft.questions[+el.dataset.q];
+    if (el.type === 'checkbox') { out[q.id] = out[q.id] || []; if (el.checked) out[q.id].push(+el.dataset.c); }
+    else if (el.value !== '') out[q.id] = +el.value;
+  });
+  return out;
+}
+function answersText(hex) {
+  const { slots } = K.buildSlots(draft);
+  const a = K.decodeAnswers(draft, slots, 'a=' + hex);
+  if (!a) return '?';
+  const parts = draft.questions.map((q, qi) => {
+    const v = a[q.id];
+    const t = Array.isArray(v) ? v.map(i => q.choices[i].label).join('・') : (typeof v === 'number' ? q.choices[v].label : '');
+    return `Q${qi + 1}:${t || '−'}`;
+  });
+  return parts.join(' / ');
+}
+function matchText(mine, theirs) {
+  const { slots } = K.buildSlots(draft);
+  const hits = [];
+  slots.forEach((s, i) => {
+    const a = parseInt(mine[i] || '0', 16), b = parseInt(theirs[i] || '0', 16);
+    if (!a || a !== b) return;
+    const q = draft.questions[s.qi];
+    hits.push(`Q${s.qi + 1}(${s.ci != null ? q.choices[s.ci].label : (q.choices[a - 1] || {}).label || '#' + a})`);
+  });
+  return hits.length ? hits.join(', ') : 'なし';
+}
+
+function tabDebug() {
+  const connected = !!badge;
+  return `
+    ${!K.hasBluetooth() ? '<div class="alert">このブラウザはBluetoothに対応していません（AndroidのChromeで開いてください）</div>' : ''}
+    <section class="card">
+      <h2>バッジに接続</h2>
+      <div class="btns">
+        <button class="btn small" data-a="dConnect" ${connected || !K.hasBluetooth() ? 'disabled' : ''}>接続</button>
+        <button class="btn secondary small" data-a="dDisconnect" ${connected ? '' : 'disabled'}>切断</button>
+      </div>
+      <p class="status" id="dStatus">${connected ? `接続中（${esc(badge.name)}）` : '未接続'}</p>
+      <div class="kv" id="dState"><span>状態</span><span>接続すると表示されます</span></div>
+      <table class="peers"><thead><tr><th>近くのバッジ</th><th>電波</th><th>範囲</th><th>最寄り</th><th>一致</th></tr></thead>
+        <tbody id="dPeers"><tr><td colspan="5" class="no">なし</td></tr></tbody></table>
+      <p class="hint">電波は0に近いほど近い。「最寄り」が「互い」になると照合されます。照合は編集中の質問で表示しています。</p>
+    </section>
+    <section class="card">
+      <h2>LEDテスト</h2>
+      <button class="btn small" data-a="dTest" ${connected ? '' : 'disabled'}>番号順に点灯</button>
+      <p class="hint">0番が赤、1番以降が白で順に点灯し、そのあと登録内容を表示します。本体ボタンを短く押しても同じです。</p>
+    </section>
+    <section class="card">
+      <h2>テスト登録</h2>
+      ${answerForm('test', testAnswers)}
+      <button class="btn small" data-a="dSend" ${connected ? '' : 'disabled'}>この回答をバッジに登録</button>
+      <p class="hint">公開前の（編集中の）質問とLED設定で登録します。光り方の確認用です。</p>
+    </section>
+    <section class="card">
+      <h2>仮想の相手を近づける</h2>
+      ${answerForm('sim', simAnswers)}
+      <div class="btns">
+        <button class="btn small" data-a="dSim" ${connected ? '' : 'disabled'}>近づける（30秒）</button>
+        <button class="btn secondary small" data-a="dSimOff" ${connected ? '' : 'disabled'}>離す</button>
+      </div>
+      <p class="hint">この回答の相手と「互いに最寄り」になった扱いにします。1台だけで光り方を確認できます。</p>
+    </section>`;
+}
+
+function dStatus(text, cls = '') { const el = $('dStatus'); if (el) { el.textContent = text; el.className = 'status ' + cls; } }
+const yesno = (v, y = 'はい', n = 'いいえ') => v ? `<span class="yes">${y}</span>` : `<span class="no">${n}</span>`;
+
+async function poll() {
+  if (!badge || !badge.dbg || polling || tab !== 'dbg') return;
+  polling = true;
+  try {
+    const text = await badge.readDebug();
+    const lines = text.split('\n');
+    const head = Object.fromEntries(lines[0].split(';').map(kv => kv.split('=')));
+    const mine = head.a || '';
+    if ($('dState')) $('dState').innerHTML = `
+      <span>自分のID</span><span>${esc(head.me || '?')}</span>
+      <span>登録中の回答</span><span>${esc(answersText(mine))}</span>
+      <span>互いに最寄り</span><span>${yesno(head.mu === '1')}</span>
+      <span>一致して点灯</span><span>${yesno(head.mt === '1')}</span>
+      <span>仮想の相手</span><span>${head.sim && head.sim !== '0' ? `<span class="yes">あり（残り${esc(head.sim)}秒）</span>` : '<span class="no">なし</span>'}</span>`;
+    const peers = lines.slice(1).filter(l => l.startsWith('p=')).map(l => {
+      const [id, rssi, inR, near, back, ans] = l.slice(2).split(',');
+      return { id, rssi, inR: inR === '1', near: near === '1', back: back === '1', ans: ans || '' };
+    });
+    if ($('dPeers')) $('dPeers').innerHTML = peers.length ? peers.map(p => `
+      <tr><td>${esc(p.id)}</td><td>${esc(p.rssi)}</td><td>${yesno(p.inR, '内', '外')}</td>
+      <td>${p.near && p.back ? '<span class="yes">互い</span>' : p.near ? '片側' : p.back ? '相手から' : '<span class="no">−</span>'}</td>
+      <td>${esc(matchText(mine, p.ans))}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="no">なし（他のバッジの電波が届いていません）</td></tr>';
+  } catch (e) {} finally { polling = false; }
+}
+
+async function badgeCmd(text, okMsg) {
+  try {
+    const res = await badge.send(text);
+    if (res === 'ERR') dStatus('バッジが受け取れませんでした', 'err');
+    else dStatus(okMsg, 'ok');
+  } catch (e) { dStatus(K.bleError(e), 'err'); }
+}
+
+// ================= 描画・操作 =================
+function render() {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  if (tab === 'dbg') { testAnswers = testAnswers || {}; }
+  main.innerHTML = { q: tabQuestions, led: tabLed, pub: tabPublish, qr: tabQR, dbg: tabDebug }[tab]();
+  if (tab === 'qr') drawQRs();
+  $('dirty').hidden = !isDirty();
+}
+
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]');
+  if (!b) return;
+  if (tab === 'dbg') { testAnswers = readForm('test'); simAnswers = readForm('sim'); }
+  tab = b.dataset.tab; render(); window.scrollTo(0, 0);
+});
+
+// 入力（再描画しない＝入力中のカーソルが飛ばない）
+main.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.g) { const g = ghDefaults(); g[el.dataset.g] = el.value.trim(); saveJSON(GH, g); return; }
+  const f = el.dataset.f;
+  if (!f) return;
+  const q = el.dataset.q != null ? draft.questions[+el.dataset.q] : null;
+  const c = q && el.dataset.c != null ? q.choices[+el.dataset.c] : null;
+  switch (f) {
+    case 'event': draft.event = el.value; break;
+    case 'devLabel': draft.device.label = el.value; break;
+    case 'devPrefixes': draft.device.prefixes = el.value.split(',').map(s => s.trim()).filter(Boolean); break;
+    case 'title': q.title = el.value.split('\n'); break;
+    case 'hint': q.hint = el.value; break;
+    case 'max': q.max = Math.max(1, Math.min(q.choices.length, +el.value || 1)); break;
+    case 'sumLabel': q.summary = { ...(q.summary || {}), label: el.value }; break;
+    case 'sumUnit': q.summary = { ...(q.summary || {}), unit: el.value }; break;
+    case 'clabel': c.label = el.value; break;
+    case 'ccolor': c.color = +el.value; el.previousElementSibling.style.background = K.PALETTE[c.color].hex; break;
+    case 'type': q.type = el.value; if (q.type === 'multi') { q.max = q.max || Math.min(3, q.choices.length); q.summary = q.summary || { label: '', unit: '' }; } orderChanged = true; return touch(true);
+    case 'startAngle': draft.ring.startAngle = +el.value; return touch(true);
+    case 'clockwise': draft.ring.clockwise = el.value === '1'; return touch(true);
+  }
+  touch(false);
+});
+main.addEventListener('change', e => { if (e.target.dataset.f === 'type' || e.target.dataset.f === 'startAngle' || e.target.dataset.f === 'clockwise') return; });
+
+main.addEventListener('click', async e => {
+  const led = e.target.closest('[data-led]');
+  if (led) {
+    const n = +led.dataset.led;
+    const { items } = slotInfo();
+    const it = items[activeSlot];
+    if (!it) return;
+    if (it.leds.includes(n)) it.leds = it.leds.filter(x => x !== n);
+    else {
+      items.forEach((o, si) => { if (si !== activeSlot && o.leds.includes(n)) o.leds = o.leds.filter(x => x !== n); });
+      it.leds = [...it.leds, n].sort((a, b) => a - b);
+    }
+    return touch(true);
+  }
+  const b = e.target.closest('[data-a]');
+  if (!b || b.disabled) return;
+  const a = b.dataset.a;
+  const qi = b.dataset.q != null ? +b.dataset.q : -1;
+  const ci = b.dataset.c != null ? +b.dataset.c : -1;
+  const qs = draft.questions;
+  const swap = (arr, i, j) => { [arr[i], arr[j]] = [arr[j], arr[i]]; };
+
+  switch (a) {
+    case 'qAdd':
+      qs.push({ id: 'q' + Date.now().toString(36), type: 'single', title: ['新しい質問'], hint: '1つだけ選んでください', color: 7, leds: [], choices: [{ label: '選択肢1', color: 1 }, { label: '選択肢2', color: 3 }] });
+      orderChanged = true; return touch(true);
+    case 'qDel':
+      if (!confirm(`Q${qi + 1} を削除しますか？`)) return;
+      qs.splice(qi, 1); orderChanged = true; return touch(true);
+    case 'qUp': swap(qs, qi, qi - 1); orderChanged = true; return touch(true);
+    case 'qDown': swap(qs, qi, qi + 1); orderChanged = true; return touch(true);
+    case 'cAdd': {
+      const q = qs[qi];
+      q.choices.push({ label: '', color: q.choices.length % 8 + 1 });
+      orderChanged = true; touch(true);
+      const inputs = main.querySelectorAll(`[data-q="${qi}"][data-f="clabel"]`);
+      inputs[inputs.length - 1].focus();
+      return;
+    }
+    case 'cDel':
+      if (qs[qi].choices.length <= 1) return alert('選択肢は1つ以上必要です');
+      qs[qi].choices.splice(ci, 1);
+      if (qs[qi].max > qs[qi].choices.length) qs[qi].max = qs[qi].choices.length;
+      orderChanged = true; return touch(true);
+    case 'cUp': swap(qs[qi].choices, ci, ci - 1); orderChanged = true; return touch(true);
+
+    case 'slot': activeSlot = +b.dataset.s; return render();
+    case 'auto': K.autoAssign(draft); return touch(true);
+    case 'clearLeds': slotInfo().items.forEach(it => { it.leds = []; }); return touch(true);
+
+    case 'publish': return publish(b);
+    case 'download': {
+      const blob = new Blob([JSON.stringify(serialize({ ...draft, version: live.version + 1 }), null, 2) + '\n'], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      Object.assign(document.createElement('a'), { href: url, download: 'questions.json' }).click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return;
+    }
+    case 'import': {
+      const f = $('file');
+      f.onchange = async () => {
+        try { draft = K.normalize(JSON.parse(await f.files[0].text())); orderChanged = true; touch(true); }
+        catch (err) { alert('読み込めませんでした: ' + err.message); }
+      };
+      return f.click();
+    }
+    case 'revert':
+      if (!confirm('編集中の内容を捨てて、公開中の内容に戻しますか？')) return;
+      draft = clone(live); orderChanged = false; return touch(true);
+
+    case 'qrSave': {
+      const box = $(b.dataset.t);
+      const src = (box.querySelector('canvas') && box.querySelector('canvas').toDataURL('image/png')) || (box.querySelector('img') || {}).src;
+      if (src) Object.assign(document.createElement('a'), { href: src, download: b.dataset.n + '.png' }).click();
+      return;
+    }
+
+    case 'dConnect':
+      dStatus('バッジを選んでください…');
+      try {
+        badge = await K.connectBadge(draft, () => { badge = null; clearInterval(pollTimer); if (tab === 'dbg') { testAnswers = readForm('test'); simAnswers = readForm('sim'); render(); dStatus('切断されました'); } });
+        const { slots } = K.buildSlots(draft);
+        const cur = K.decodeAnswers(draft, slots, await badge.readAnswers());
+        if (cur) testAnswers = cur;
+        render();
+        if (!badge.dbg) $('dState').innerHTML = '<span>状態</span><span>このバッジのプログラムは診断に対応していません。最新版を書き込んでください</span>';
+        clearInterval(pollTimer); pollTimer = setInterval(poll, 800); poll();
+      } catch (err) { badge = null; dStatus(K.bleError(err), 'err'); }
+      return;
+    case 'dDisconnect': badge && badge.disconnect(); return;
+    case 'dTest': return badgeCmd('test', 'LEDテスト中');
+    case 'dSend': {
+      testAnswers = readForm('test');
+      const { slots, error } = K.buildSlots(draft);
+      if (error) return dStatus(error, 'err');
+      const res = await badge.send(K.encodeConfig(draft, slots, testAnswers)).catch(err => (dStatus(K.bleError(err), 'err'), null));
+      if (res === 'OK') dStatus('✓ 登録しました（リングが一周→登録内容を表示）', 'ok');
+      else if (res) dStatus('登録に失敗しました。もう一度送ってください', 'err');
+      return;
+    }
+    case 'dSim': {
+      simAnswers = readForm('sim');
+      const { slots } = K.buildSlots(draft);
+      return badgeCmd(K.encodeSim(draft, slots, simAnswers), '仮想の相手を近づけました（30秒）');
+    }
+    case 'dSimOff': return badgeCmd('simoff', '仮想の相手を離しました');
+  }
+});
+
+// ---------- GitHubへ公開 ----------
+function b64(text) {
+  let bin = '';
+  new TextEncoder().encode(text).forEach(x => { bin += String.fromCharCode(x); });
+  return btoa(bin);
+}
+async function publish(btn) {
+  const g = ghDefaults();
+  const st = $('pubStatus');
+  const say = (t, cls = '') => { st.textContent = t; st.className = 'status ' + cls; };
+  if (!g.owner || !g.repo || !g.token) return say('GitHubの設定（ユーザー名・リポジトリ名・トークン）を入れてください', 'err');
+  btn.disabled = true; say('公開中…');
+  const api = `https://api.github.com/repos/${encodeURIComponent(g.owner)}/${encodeURIComponent(g.repo)}/contents/${g.path.split('/').map(encodeURIComponent).join('/')}`;
+  const headers = { Authorization: `Bearer ${g.token}`, Accept: 'application/vnd.github+json' };
+  try {
+    let sha, remoteVersion = live.version;
+    const cur = await fetch(`${api}?ref=${encodeURIComponent(g.branch)}`, { headers, cache: 'no-store' });
+    if (cur.ok) {
+      const j = await cur.json();
+      sha = j.sha;
+      try { remoteVersion = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))))).version || remoteVersion; } catch (e) {}
+    } else if (cur.status !== 404) throw new Error(cur.status === 401 ? 'トークンが正しくありません' : `取得に失敗 (${cur.status})`);
+    const next = serialize({ ...draft, version: Math.max(live.version, remoteVersion) + 1 });
+    const body = { message: `質問を更新 (v${next.version})`, content: b64(JSON.stringify(next, null, 2) + '\n'), branch: g.branch };
+    if (sha) body.sha = sha;
+    const put = await fetch(api, { method: 'PUT', headers, body: JSON.stringify(body) });
+    if (!put.ok) throw new Error(put.status === 403 || put.status === 404 ? 'トークンに書き込み権限がありません' : put.status === 409 ? '他の人が先に更新しました。ページを開き直してください' : `公開に失敗 (${put.status})`);
+    live = clone(K.normalize(next)); draft = clone(live); orderChanged = false;
+    saveJSON(DRAFT, null);
+    render();
+    $('pubStatus').textContent = `✓ v${next.version} を公開しました。1分ほどで本サイトに反映されます。`;
+    $('pubStatus').className = 'status ok';
+  } catch (err) {
+    say(err.message || '公開に失敗しました', 'err'); btn.disabled = false;
+  }
+}
+
+// ---------- 起動 ----------
+async function init() {
+  $('brand').innerHTML = K.logoSVG() + 'こもっち 編集';
+  try {
+    const res = await fetch('questions.json', { cache: 'no-store' });
+    live = K.normalize(await res.json());
+  } catch (e) {
+    main.innerHTML = '<div class="alert err">questions.json を読み込めませんでした。</div>';
+    return;
+  }
+  const saved = loadJSON(DRAFT, null);
+  if (saved && saved.data && saved.base === live.version) {
+    draft = K.normalize(saved.data); orderChanged = !!saved.orderChanged;
+  } else {
+    if (saved && saved.data && saved.base !== live.version) alert('公開中の質問が更新されていたため、この端末の下書きは破棄しました。');
+    draft = clone(live);
+  }
+  render();
+}
+window.addEventListener('beforeunload', () => { badge && badge.disconnect(); });
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+/* こもっち 共通の見た目（ロゴの暖色に統一） */
+:root {
+  --bg: #f8f4ec;
+  --surface: #ffffff;
+  --text: #3a3631;
+  --sub: #6f685d;
+  --primary: #d4602a;        /* ボタン（白文字が読める濃さのオレンジ） */
+  --primary-text: #b4501f;   /* 文字リンク・タグ文字 */
+  --primary-soft: #fde8db;   /* タグ背景 */
+  --primary-tint: #fff3ea;   /* 選択中の選択肢 */
+  --accent-grad: linear-gradient(90deg, #ff7448, #fbc145);
+  --border: #ddd6ca;
+  --track: #e8e1d4;
+  --radio: #c9c1b3;
+  --warn-bg: #fff1cc;
+  --warn-text: #8a6a12;
+  --error: #c2412d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); }
+body {
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; line-height: 1.5; }
+.brand svg { width: 30px; height: 24px; }
+
+.tag {
+  display: inline-flex; align-self: flex-start; align-items: center;
+  padding: 5px 12px; border-radius: 12px;
+  background: var(--primary-soft); color: var(--primary-text);
+  font-weight: 700; font-size: 12px; line-height: 1.5; white-space: nowrap;
+}
+
+.btn {
+  width: 100%; border: 0; border-radius: 28px; padding: 16px 24px;
+  background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; line-height: 1.5;
+  cursor: pointer; transition: opacity .15s, transform .1s;
+}
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .4; cursor: default; transform: none; }
+.btn.secondary { background: var(--surface); color: var(--primary-text); border: 2px solid var(--primary); padding: 14px 24px; }
+.link {
+  background: none; border: 0; width: 100%; text-align: center; cursor: pointer;
+  color: var(--primary-text); font-weight: 700; font-size: 13px; line-height: 1.5; padding: 4px 0;
+}
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 16px 20px; }
+.alert { background: var(--warn-bg); color: var(--warn-text); border-radius: 16px; padding: 12px 16px; font-size: 13px; line-height: 1.6; }
+.alert.err { background: #fde8e4; color: var(--error); }
