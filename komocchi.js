@@ -46,6 +46,7 @@
       if (q.type === 'single' && q.choices.length > 15) error = `Q${qi + 1} の選択肢が15個を超えています`;
       if (!q.choices.length) error = `Q${qi + 1} に選択肢がありません`;
     });
+    if (!data.questions.length) error = '質問が1つもありません';
     if (slots.length > NQ) error = `バッジの枠が ${slots.length} 個必要です（上限 ${NQ}）`;
     return { slots, error };
   }

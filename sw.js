@@ -1,6 +1,6 @@
 // オフライン対応: 一度開けば、圏外の会場でも同じ端末でページが開ける
 // サイトを更新したら CACHE の番号を上げる
-const CACHE = 'komocchi-v2';
+const CACHE = 'komocchi-v3';
 const CORE = ['./', 'index.html', 'komocchi.js', 'theme.css', 'questions.json', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {

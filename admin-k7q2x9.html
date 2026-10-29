@@ -97,6 +97,15 @@
   .status { font-size: 13px; color: var(--sub); min-height: 20px; }
   .status.err { color: var(--error); font-weight: 700; }
   .status.ok { color: #1a8f3c; font-weight: 700; }
+  .toast {
+    position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10;
+    width: min(560px, calc(100% - 32px)); display: flex; align-items: center; gap: 12px;
+    background: #3a3631; color: #fff; border-radius: 14px; padding: 12px 14px 12px 18px; font-size: 14px;
+    box-shadow: 0 6px 20px #0003;
+  }
+  .toast[hidden] { display: none; }
+  .toast span { flex: 1; }
+  .toast button { flex: none; background: none; border: 0; color: #fbc145; font-weight: 700; font-size: 14px; padding: 6px 8px; cursor: pointer; }
   code { font-size: 12px; background: var(--track); border-radius: 4px; padding: 1px 4px; }
 </style>
 </head>
@@ -115,6 +124,7 @@
   </nav>
 </div></header>
 <main id="main"></main>
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script src="komocchi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -148,6 +158,16 @@ function serialize(d) {
     q.choices.forEach(c => { if (!c.leds || !c.leds.length) delete c.leds; });
   });
   return out;
+}
+// 削除などの直後に「元に戻す」を出す（確認ダイアログは端末によって出ないことがあるため使わない）
+let undo = null, toastTimer = null;
+function snapshot() { undo = { data: clone(draft), orderChanged }; }
+function toast(msg, canUndo = false) {
+  const el = $('toast');
+  el.innerHTML = `<span>${esc(msg)}</span>${canUndo && undo ? '<button data-a="undo">元に戻す</button>' : ''}`;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, canUndo ? 8000 : 4000);
 }
 const isDirty = () => JSON.stringify(serialize(draft)) !== JSON.stringify(serialize(live));
 function touch(structural) {
@@ -551,6 +571,12 @@ main.addEventListener('input', e => {
 });
 main.addEventListener('change', e => { if (e.target.dataset.f === 'type' || e.target.dataset.f === 'startAngle' || e.target.dataset.f === 'clockwise') return; });
 
+$('toast').addEventListener('click', e => {
+  if (!e.target.closest('[data-a="undo"]') || !undo) return;
+  draft = undo.data; orderChanged = undo.orderChanged; undo = null;
+  touch(true); toast('元に戻しました');
+});
+
 main.addEventListener('click', async e => {
   const led = e.target.closest('[data-led]');
   if (led) {
@@ -578,8 +604,9 @@ main.addEventListener('click', async e => {
       qs.push({ id: 'q' + Date.now().toString(36), type: 'single', title: ['新しい質問'], hint: '1つだけ選んでください', color: 7, leds: [], choices: [{ label: '選択肢1', color: 1 }, { label: '選択肢2', color: 3 }] });
       orderChanged = true; return touch(true);
     case 'qDel':
-      if (!confirm(`Q${qi + 1} を削除しますか？`)) return;
-      qs.splice(qi, 1); orderChanged = true; return touch(true);
+      snapshot();
+      qs.splice(qi, 1); orderChanged = true; touch(true);
+      return toast(`Q${qi + 1} を削除しました`, true);
     case 'qUp': swap(qs, qi, qi - 1); orderChanged = true; return touch(true);
     case 'qDown': swap(qs, qi, qi + 1); orderChanged = true; return touch(true);
     case 'cAdd': {
@@ -591,15 +618,21 @@ main.addEventListener('click', async e => {
       return;
     }
     case 'cDel':
-      if (qs[qi].choices.length <= 1) return alert('選択肢は1つ以上必要です');
+      if (qs[qi].choices.length <= 1) return toast('選択肢は1つ以上必要です。質問ごと消すときは右上の × を押してください');
+      snapshot();
       qs[qi].choices.splice(ci, 1);
       if (qs[qi].max > qs[qi].choices.length) qs[qi].max = qs[qi].choices.length;
-      orderChanged = true; return touch(true);
+      orderChanged = true; touch(true);
+      return toast(`Q${qi + 1} の選択肢を削除しました`, true);
+    case 'undo':
+      if (!undo) return;
+      draft = undo.data; orderChanged = undo.orderChanged; undo = null;
+      touch(true); return toast('元に戻しました');
     case 'cUp': swap(qs[qi].choices, ci, ci - 1); orderChanged = true; return touch(true);
 
     case 'slot': activeSlot = +b.dataset.s; return render();
-    case 'auto': K.autoAssign(draft); return touch(true);
-    case 'clearLeds': slotInfo().items.forEach(it => { it.leds = []; }); return touch(true);
+    case 'auto': snapshot(); K.autoAssign(draft); touch(true); return toast('24個を均等に割り当てました', true);
+    case 'clearLeds': snapshot(); slotInfo().items.forEach(it => { it.leds = []; }); touch(true); return toast('LEDの割り当てをすべて外しました', true);
 
     case 'publish': return publish(b);
     case 'download': {
@@ -612,14 +645,16 @@ main.addEventListener('click', async e => {
     case 'import': {
       const f = $('file');
       f.onchange = async () => {
-        try { draft = K.normalize(JSON.parse(await f.files[0].text())); orderChanged = true; touch(true); }
-        catch (err) { alert('読み込めませんでした: ' + err.message); }
+        try { const next = K.normalize(JSON.parse(await f.files[0].text())); snapshot(); draft = next; orderChanged = true; touch(true); toast('ファイルを読み込みました', true); }
+        catch (err) { toast('読み込めませんでした: ' + err.message); }
+        f.value = '';
       };
       return f.click();
     }
     case 'revert':
-      if (!confirm('編集中の内容を捨てて、公開中の内容に戻しますか？')) return;
-      draft = clone(live); orderChanged = false; return touch(true);
+      snapshot();
+      draft = clone(live); orderChanged = false; touch(true);
+      return toast('公開中の内容に戻しました', true);
 
     case 'qrSave': {
       const box = $(b.dataset.t);
@@ -711,10 +746,10 @@ async function init() {
   if (saved && saved.data && saved.base === live.version) {
     draft = K.normalize(saved.data); orderChanged = !!saved.orderChanged;
   } else {
-    if (saved && saved.data && saved.base !== live.version) alert('公開中の質問が更新されていたため、この端末の下書きは破棄しました。');
     draft = clone(live);
   }
   render();
+  if (saved && saved.data && saved.base !== live.version) toast('公開中の質問が更新されていたため、この端末の下書きは破棄しました');
 }
 window.addEventListener('beforeunload', () => { badge && badge.disconnect(); });
 init();

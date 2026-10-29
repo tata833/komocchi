@@ -121,7 +121,7 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } ca
 // ---------- 共通パーツ ----------
 const header = () => `<div class="header"><p class="brand">${K.logoSVG()}${esc(data.brand)}</p><span class="tag">LIVE 会場限定</span></div>`;
 function progress(step) {
-  const total = data.questions.length + 1;
+  const total = data.questions.length;
   return `<div class="progress" aria-label="${step} / ${total}">${Array.from({ length: total }, (_, i) => `<span class="${i < step ? 'on' : ''}"></span>`).join('')}</div>`;
 }
 function go(next) { screen = next; render(); window.scrollTo(0, 0); }
@@ -146,22 +146,10 @@ const screens = {
       </div>
       ${alert}
       <div class="card info"><strong>質問に答えるだけ。約1分で完了</strong><p class="note">アプリのインストールは不要です</p></div>
+      <p class="status" id="status" style="min-height:0"></p>
       <button class="btn" data-act="start" ${configError ? 'disabled' : ''}>はじめる</button>
+      <button class="link" data-act="restore" ${configError ? 'disabled' : ''}>登録済みのバッジから回答を読み込む</button>
       <p class="fine">Google Chrome（Web Bluetooth対応）で開いてください</p>`;
-  },
-
-  nick() {
-    return `${header()}${progress(1)}
-      <span class="tag warn">はじめての方だけ</span>
-      <h1 class="s24">はじめまして！<br>ニックネームを教えてください</h1>
-      <p class="lead">本名や連絡先は不要です。あとから変更もできます。</p>
-      <label class="label" for="nick">ニックネーム</label>
-      <input id="nick" class="input" maxlength="10" autocomplete="off" enterkeyhint="next" value="${esc(state.nick)}" placeholder="例：ミナト">
-      <p class="note right"><span id="count">${[...state.nick].length}</span> / 10文字</p>
-      <div class="spacer"></div>
-      <p class="status" id="status"></p>
-      <button class="btn" data-act="nickNext" ${state.nick.trim() ? '' : 'disabled'}>次へ</button>
-      <button class="link" data-act="restore">登録済みの方はこちら</button>`;
   },
 
   q(idx) {
@@ -183,7 +171,7 @@ const screens = {
         return `<button class="option ${on ? 'on' : ''}" role="radio" aria-checked="${on}" data-act="pick" data-i="${i}"><span class="radio"></span>${esc(c.label)}</button>`;
       }).join('')}</div>`;
     }
-    return `${header()}${progress(idx + 2)}
+    return `${header()}${progress(idx + 1)}
       <div class="qtag"><span class="tag">会場限定の質問</span><span class="qnum">Q${idx + 1} / ${n}</span></div>
       <h1>${q.title.map(esc).join('<br>')}</h1>
       <p class="lead">${esc(q.hint)}</p>
@@ -218,7 +206,7 @@ const screens = {
     const multi = data.questions.find(q => q.type === 'multi' && q.summary);
     const answered = data.questions.filter(isAnswered).length;
     const total = data.questions.length;
-    const rows = [['ニックネーム', state.nick || '—']];
+    const rows = [];
     if (multi) rows.push([multi.summary.label, `${(state.answers[multi.id] || []).length}${multi.summary.unit || ''}`]);
     rows.push(['回答', answered === total ? `${total}問すべて完了` : `${answered} / ${total}問`]);
     return `${header()}
@@ -238,16 +226,6 @@ function render() {
   app.classList.remove('busy');
   const m = /^q(\d+)$/.exec(screen);
   app.innerHTML = m ? screens.q(+m[1]) : screens[screen]();
-  if (screen === 'nick') {
-    const input = document.getElementById('nick');
-    input.addEventListener('input', () => {
-      state.nick = input.value.slice(0, 10);
-      document.getElementById('count').textContent = [...state.nick].length;
-      app.querySelector('[data-act="nickNext"]').disabled = !state.nick.trim();
-      save();
-    });
-    input.addEventListener('keydown', e => { if (e.key === 'Enter' && state.nick.trim()) go('q0'); });
-  }
 }
 
 // ---------- 操作 ----------
@@ -259,8 +237,7 @@ app.addEventListener('click', async e => {
   const idx = m ? +m[1] : -1;
   const q = idx >= 0 ? data.questions[idx] : null;
 
-  if (act === 'start') go(state.nick.trim() ? 'q0' : 'nick');
-  else if (act === 'nickNext') go('q0');
+  if (act === 'start') go('q0');
   else if (act === 'pick') {
     const i = +t.dataset.i;
     if (q.type === 'multi') {
