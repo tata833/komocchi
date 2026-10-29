@@ -119,7 +119,7 @@ function load() { try { const s = JSON.parse(localStorage.getItem(STORE)); if (s
 function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
 
 // ---------- 共通パーツ ----------
-const header = () => `<div class="header"><p class="brand">${K.logoSVG()}${esc(data.brand)}</p><span class="tag">LIVE 会場限定</span></div>`;
+const header = () => `<div class="header"><p class="brand">${K.logoSVG()}${esc(data.brand)}</p></div>`;
 function progress(step) {
   const total = data.questions.length;
   return `<div class="progress" aria-label="${step} / ${total}">${Array.from({ length: total }, (_, i) => `<span class="${i < step ? 'on' : ''}"></span>`).join('')}</div>`;
@@ -172,7 +172,7 @@ const screens = {
       }).join('')}</div>`;
     }
     return `${header()}${progress(idx + 1)}
-      <div class="qtag"><span class="tag">会場限定の質問</span><span class="qnum">Q${idx + 1} / ${n}</span></div>
+      <div class="qtag"><span class="qnum">Q${idx + 1} / ${n}</span></div>
       <h1>${q.title.map(esc).join('<br>')}</h1>
       <p class="lead">${esc(q.hint)}</p>
       ${body}${foot}
