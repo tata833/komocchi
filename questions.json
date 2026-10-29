@@ -1,55 +1,66 @@
 {
-  "version": 1,
+  "version": 2,
   "brand": "こもっち",
-  "event": "〇〇ライブ 2026 ＠ 〇〇ホール",
-  "device": { "label": "こもっち", "prefixes": ["KOMOCCHI", "MyDevice"] },
-  "ring": { "startAngle": 0, "clockwise": true },
+  "event": "プロジェクト制作実習2　中間発表会",
+  "device": {
+    "label": "こもっち",
+    "prefixes": [
+      "KOMOCCHI",
+      "MyDevice"
+    ]
+  },
+  "ring": {
+    "startAngle": 0,
+    "clockwise": true
+  },
   "questions": [
     {
-      "id": "artist",
-      "type": "multi",
-      "max": 3,
-      "title": ["いま一番聴きたい", "アーティストは？"],
-      "hint": "いくつでもOK（最大3つ）",
-      "summary": { "label": "アーティスト", "unit": "組" },
-      "color": 8,
-      "leds": [],
-      "choices": [
-        { "label": "アーティストA", "color": 1, "leds": [0, 1, 2] },
-        { "label": "アーティストB", "color": 8, "leds": [3, 4, 5] },
-        { "label": "アーティストC", "color": 4, "leds": [6, 7, 8] },
-        { "label": "アーティストD", "color": 2, "leds": [9, 10, 11] },
-        { "label": "アーティストE", "color": 6, "leds": [12, 13, 14] },
-        { "label": "アーティストF", "color": 5, "leds": [15, 16, 17] }
-      ]
-    },
-    {
-      "id": "song",
+      "id": "qmvsutjqn",
       "type": "single",
-      "title": ["いちばん思い入れのある", "1曲は？"],
-      "hint": "1つだけ選んでください",
-      "color": 6,
-      "leds": [18, 19, 20],
+      "title": [
+        "今日の気分は？"
+      ],
+      "hint": "一つだけ選んでください",
+      "color": 7,
+      "leds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
       "choices": [
-        { "label": "曲名A", "color": 1 },
-        { "label": "曲名B", "color": 4 },
-        { "label": "曲名C", "color": 2 },
-        { "label": "曲名D", "color": 6 },
-        { "label": "選べない！", "color": 7 }
-      ]
-    },
-    {
-      "id": "history",
-      "type": "single",
-      "title": ["このアーティストの", "ライブは何回目？"],
-      "hint": "1つだけ選んでください",
-      "color": 4,
-      "leds": [21, 22, 23],
-      "choices": [
-        { "label": "今日が初めて", "color": 2 },
-        { "label": "2〜5回目", "color": 6 },
-        { "label": "6〜10回目", "color": 8 },
-        { "label": "11回以上（古参！）", "color": 5 }
+        {
+          "label": "さいこう！",
+          "color": 1
+        },
+        {
+          "label": "ふつう",
+          "color": 2
+        },
+        {
+          "label": "びみょう",
+          "color": 3
+        }
       ]
     }
   ]
