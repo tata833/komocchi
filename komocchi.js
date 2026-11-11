@@ -56,15 +56,15 @@
   }
 
   // 枠ごとの「光らせるLED」と「色」
-  //   single: 選んだ選択肢の leds（なければ質問の leds）、選んだ選択肢の color（なければ質問の color）
-  //   multi : その選択肢の leds / color（なければ質問の値）
+  //   色は質問ごとに1色（どの選択肢で一致しても、その質問の色で光る）
+  //   leds  single: 選んだ選択肢の leds（なければ質問の leds） / multi: その選択肢の leds（なければ質問の leds）
   function slotLook(data, slot, chosen) {
     const q = data.questions[slot.qi];
     const ci = slot.ci != null ? slot.ci : chosen;
     const c = ci != null ? q.choices[ci] || {} : {};
     return {
       leds: (c.leds && c.leds.length ? c.leds : q.leds) || [],
-      color: c.color || q.color || 7,
+      color: q.color || 7,
     };
   }
 
