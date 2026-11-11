@@ -2,12 +2,20 @@
   "version": 4,
   "brand": "こもっち",
   "event": "プロジェクト制作実習2　中間発表会",
+  "eventId": "pj2-chukan-2026",
   "device": {
     "label": "こもっち",
     "prefixes": [
       "KOMOCCHI",
       "MyDevice"
     ]
+  },
+  "match": {
+    "near": -61,
+    "exit": -76,
+    "aura": -85,
+    "brightness": 60,
+    "group": false
   },
   "ring": {
     "startAngle": 0,

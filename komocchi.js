@@ -1,5 +1,5 @@
 // こもっち 共通処理（本サイト index.html と 編集ページ の両方が読み込む）
-// ファーム ble_match_atom.ino v3 と合わせてある
+// ファーム ble_match_atom.ino v4 と合わせてある
 (function () {
   const SERVICE_UUID = 'b5f3a1c0-4d2e-4f8a-9c1b-2a7e3d5f6a01';
   const CONFIG_UUID  = 'b5f3a1c1-4d2e-4f8a-9c1b-2a7e3d5f6a01';
@@ -33,6 +33,10 @@
     }));
     data.ring = Object.assign({ startAngle: 0, clockwise: true }, data.ring || {});
     data.device = Object.assign({ label: 'こもっち', prefixes: ['KOMOCCHI', 'MyDevice'] }, data.device || {});
+    // イベントID: 同じIDのバッジ同士だけ照合する（未設定ならイベント名を使う）
+    data.eventId = String(data.eventId || data.event || 'komocchi');
+    // 照合の設定: 電波の強さ(dBm, 0に近いほど近い)・明るさ・グループモード
+    data.match = Object.assign({ near: -61, exit: -76, aura: -85, brightness: 60, group: false }, data.match || {});
     return data;
   }
 
@@ -80,7 +84,26 @@
     return m.toString(16).padStart(10, '0');
   };
 
-  // ファームの parseConfig 形式: v=2;a=<8桁>;c=<8桁>;m=<10桁×8>
+  // イベントID → 16bit（FNV-1a を半分に畳む）。0は「未設定」と区別するため使わない
+  function eventHash(id) {
+    let h = 0x811c9dc5;
+    for (const b of new TextEncoder().encode(String(id || ''))) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; }
+    const x = ((h >>> 16) ^ (h & 0xffff)) || 1;
+    return x.toString(16).padStart(4, '0');
+  }
+
+  // 照合の設定を、ファームが受け付ける範囲にそろえる（t=近く,切れる,気配 は dBm の絶対値）
+  function matchParams(data) {
+    const m = data.match || {};
+    const abs = (v, d) => Math.round(Math.abs(+v || d));
+    const near = Math.min(100, Math.max(30, abs(m.near, 61)));
+    const exit = Math.min(105, Math.max(near + 3, abs(m.exit, 76)));
+    const aura = Math.min(110, Math.max(exit, abs(m.aura, 85)));
+    const b = Math.min(255, Math.max(5, Math.round(+m.brightness || 60)));
+    return { near, exit, aura, b, g: m.group ? 1 : 0 };
+  }
+
+  // ファームの parseConfig 形式: v=3;e=<4桁>;a=<8桁>;c=<8桁>;m=<10桁×8>;t=<近く>,<切れる>,<気配>;b=<明るさ>;g=<0|1>
   function encodeConfig(data, slots, answers) {
     const nib = nibbles(data, slots, answers);
     let a = '', c = '', m = '';
@@ -92,7 +115,8 @@
       c += look.color.toString(16);
       m += maskHex(look.leds);
     }
-    return `v=2;a=${a};c=${c};m=${m}`;
+    const p = matchParams(data);
+    return `v=3;e=${eventHash(data.eventId)};a=${a};c=${c};m=${m};t=${p.near},${p.exit},${p.aura};b=${p.b};g=${p.g}`;
   }
 
   // 仮想の相手（sim=<8桁>）
@@ -240,7 +264,7 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   window.K = {
-    NQ, LED_NUM, PALETTE, normalize, buildSlots, slotLook, encodeConfig, encodeSim, decodeAnswers,
+    NQ, LED_NUM, PALETTE, normalize, buildSlots, slotLook, encodeConfig, eventHash, matchParams, encodeSim, decodeAnswers,
     previewFills, autoAssign, ledXY, logoSVG, badgeSVG, hasBluetooth, connectBadge, bleError, esc,
   };
 })();

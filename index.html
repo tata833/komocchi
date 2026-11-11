@@ -216,6 +216,11 @@ const screens = {
         <p class="lead center">あとは会場を歩くだけ。<br>同じ「好き」の人とすれ違うと、バッジが光ります。</p>
       </div>
       <div class="card summary">${rows.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>
+      <div class="card summary">
+        <div class="row"><span class="k">ふわっと光る</span><span class="v">近くに同じ「好き」の人がいます</span></div>
+        <div class="row"><span class="k">色が点いた</span><span class="v">ボタンを短く押して合図。相手も押すとリングが回ります</span></div>
+        <div class="row"><span class="k">今は話さない</span><span class="v">ボタンを1秒長押しでNG（もう一度でOK）</span></div>
+      </div>
       <p class="note center">何が共通しているかは、話すまでのお楽しみ。</p>
       <button class="btn" data-act="close">閉じる</button>
       <button class="btn secondary" data-act="redo">回答をやり直す</button>`;

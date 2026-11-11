@@ -262,6 +262,23 @@ function tabQuestions() {
         <label class="f">バッジ名の先頭（カンマ区切り）<input class="in" data-f="devPrefixes" value="${esc(draft.device.prefixes.join(', '))}"></label>
       </div>
       <p class="hint">「バッジ名の先頭」はファームの <code>DEVICE_NAME</code> の頭と合わせます。例：<code>KOMOCCHI-01</code> なら <code>KOMOCCHI</code></p>
+      <label class="f">イベントID（同じIDのバッジ同士だけ照合）<input class="in" data-f="eventId" value="${esc(draft.eventId)}"></label>
+      <p class="hint">イベントごとに別のIDにすると、隣の会場や別のイベントのバッジとは反応しません。変えたら、バッジは登録し直しが必要です。（バッジに送る値：<code>${K.eventHash(draft.eventId)}</code>）</p>
+    </section>
+    <section class="card">
+      <h2>照合の設定</h2>
+      <div class="grid2">
+        <label class="f">照合が始まる電波（dBm）<input class="in" type="number" data-f="mNear" value="${draft.match.near}"></label>
+        <label class="f">照合が切れる電波（dBm）<input class="in" type="number" data-f="mExit" value="${draft.match.exit}"></label>
+        <label class="f">気配を感じる電波（dBm）<input class="in" type="number" data-f="mAura" value="${draft.match.aura}"></label>
+        <label class="f">明るさ（5〜255）<input class="in" type="number" min="5" max="255" data-f="mBright" value="${draft.match.brightness}"></label>
+      </div>
+      <label class="f">照合の相手
+        <select class="in" data-f="mGroup">
+          <option value="0" ${draft.match.group ? '' : 'selected'}>最寄りの1人（フェス・コミケ向け）</option>
+          <option value="1" ${draft.match.group ? 'selected' : ''}>範囲内の全員（新歓・交流会向け）</option>
+        </select></label>
+      <p class="hint">電波は0に近いほど近距離です。「照合が切れる」は「始まる」より小さく、「気配」はさらに小さくします。値は「バッジ診断」タブの電波の数字を見ながら、会場に合わせて決めてください。</p>
     </section>
     ${qs}
     <button class="btn ghost" data-a="qAdd">＋ 質問を追加</button>`;
@@ -502,7 +519,15 @@ function tabDebug() {
     <section class="card">
       <h2>LEDテスト</h2>
       <button class="btn small" data-a="dTest" ${connected ? '' : 'disabled'}>番号順に点灯</button>
-      <p class="hint">0番が赤、1番以降が白で順に点灯し、そのあと登録内容を表示します。本体ボタンを短く押しても同じです。</p>
+      <p class="hint">0番が赤、1番以降が白で順に点灯し、そのあと登録内容を表示します。</p>
+    </section>
+    <section class="card">
+      <h2>ボタン操作</h2>
+      <div class="btns">
+        <button class="btn small" data-a="dWave" ${connected ? '' : 'disabled'}>合図を送る</button>
+        <button class="btn secondary small" data-a="dOk" ${connected ? '' : 'disabled'}>話しかけOK/NGを切替</button>
+      </div>
+      <p class="hint">本体ボタンと同じ操作です。短く押す＝合図、1〜5秒長押し＝OK/NG切替、5秒以上＝登録を消去。</p>
     </section>
     <section class="card">
       <h2>テスト登録</h2>
@@ -517,7 +542,7 @@ function tabDebug() {
         <button class="btn small" data-a="dSim" ${connected ? '' : 'disabled'}>近づける（30秒）</button>
         <button class="btn secondary small" data-a="dSimOff" ${connected ? '' : 'disabled'}>離す</button>
       </div>
-      <p class="hint">この回答の相手と「互いに最寄り」になった扱いにします。1台だけで光り方を確認できます。</p>
+      <p class="hint">この回答の相手と「互いに最寄り」になった扱いにします。仮想の相手は合図済みなので、近づけたあと「合図を送る」を押すと同期演出も確認できます。</p>
     </section>`;
 }
 
@@ -537,6 +562,10 @@ async function poll() {
       <span>登録中の回答</span><span>${esc(answersText(mine))}</span>
       <span>互いに最寄り</span><span>${yesno(head.mu === '1')}</span>
       <span>一致して点灯</span><span>${yesno(head.mt === '1')}</span>
+      <span>話しかけ</span><span>${yesno(head.ok !== '0', 'OK', 'NG')}</span>
+      <span>合図</span><span>${yesno(head.wv === '1', '合図中', 'なし')}</span>
+      <span>イベント</span><span>${esc(head.ev || '?')}${head.ev && head.ev.toLowerCase() !== K.eventHash(draft.eventId) ? ' <span class="no">（編集中のIDと違う）</span>' : ''}</span>
+      <span>照合の相手</span><span>${head.g === '1' ? '範囲内の全員' : '最寄りの1人'}</span>
       <span>仮想の相手</span><span>${head.sim && head.sim !== '0' ? `<span class="yes">あり（残り${esc(head.sim)}秒）</span>` : '<span class="no">なし</span>'}</span>`;
     const peers = lines.slice(1).filter(l => l.startsWith('p=')).map(l => {
       const [id, rssi, inR, near, back, ans] = l.slice(2).split(',');
@@ -585,6 +614,12 @@ main.addEventListener('input', e => {
   switch (f) {
     case 'event': draft.event = el.value; break;
     case 'devLabel': draft.device.label = el.value; break;
+    case 'eventId': draft.eventId = el.value.trim(); break;
+    case 'mNear': draft.match.near = -Math.abs(+el.value || 61); break;
+    case 'mExit': draft.match.exit = -Math.abs(+el.value || 76); break;
+    case 'mAura': draft.match.aura = -Math.abs(+el.value || 85); break;
+    case 'mBright': draft.match.brightness = Math.max(5, Math.min(255, +el.value || 60)); break;
+    case 'mGroup': draft.match.group = el.value === '1'; break;
     case 'devPrefixes': draft.device.prefixes = el.value.split(',').map(s => s.trim()).filter(Boolean); break;
     case 'title': q.title = el.value.split('\n'); break;
     case 'hint': q.hint = el.value; break;
@@ -726,6 +761,8 @@ main.addEventListener('click', async e => {
       return;
     case 'dDisconnect': badge && badge.disconnect(); return;
     case 'dTest': return badgeCmd('test', 'LEDテスト中');
+    case 'dWave': return badgeCmd('wave', '合図を送りました');
+    case 'dOk': return badgeCmd('toggleok', '話しかけOK/NGを切り替えました');
     case 'dSend': {
       testAnswers = readForm('test');
       const { slots, error } = K.buildSlots(draft);
